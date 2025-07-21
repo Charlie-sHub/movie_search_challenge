@@ -32,14 +32,16 @@ class OmdbApiClient {
     );
 
     final response = await _http.get(uri);
+
     if (response.statusCode != 200) {
       throw Exception('HTTP ${response.statusCode}');
     } else {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      if (json['Response'] == 'False') {
-        throw Exception(json['Error'] as String);
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      if (jsonMap['Response'] == 'False') {
+        final errorMessage = jsonMap['Error'] as String? ?? 'Unknown error';
+        throw Exception(errorMessage);
       } else {
-        return json;
+        return jsonMap;
       }
     }
   }

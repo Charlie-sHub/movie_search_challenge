@@ -22,9 +22,7 @@ class SearchResultsStateView extends StatelessWidget {
         return const Center(
           child: Text('Enter a movie title to begin searching.'),
         );
-      } else if (state.isLoading && state.results.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
-      } else if (state.failureOption.isSome()) {
+      } else if (state.failureOption.isSome() && state.page == 1) {
         final failure = state.failureOption.fold(
           () => throw Error(),
           id,
@@ -40,6 +38,12 @@ class SearchResultsStateView extends StatelessWidget {
           movies: state.results,
           isLoadingMore: state.isLoading,
           hasReachedEnd: state.hasReachedEnd,
+          footerError: state.failureOption.isSome() && state.page > 1
+              ? state.failureOption.fold(
+                  () => '',
+                  (failure) => failure.errorString,
+                )
+              : null,
         );
       }
     },

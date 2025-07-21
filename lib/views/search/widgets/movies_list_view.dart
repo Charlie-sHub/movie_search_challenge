@@ -12,6 +12,7 @@ class MoviesListView extends StatelessWidget {
     required this.movies,
     required this.isLoadingMore,
     required this.hasReachedEnd,
+    this.footerError,
     super.key,
   });
 
@@ -24,42 +25,67 @@ class MoviesListView extends StatelessWidget {
   /// Whether there are no more movies to load
   final bool hasReachedEnd;
 
+  /// Error message to display if any
+  final String? footerError;
+
   @override
   Widget build(BuildContext context) =>
       NotificationListener<ScrollNotification>(
         onNotification: (scrollInfo) {
-          if (!hasReachedEnd &&
-              !isLoadingMore &&
-              scrollInfo.metrics.pixels >=
-                  scrollInfo.metrics.maxScrollExtent - 200) {
-            context.read<SearchBloc>().add(
-              const SearchEvent.loadNextPage(),
-            );
+          if (scrollInfo.metrics.maxScrollExtent <= 0) {
+            return false;
+          } else {
+            if (!hasReachedEnd &&
+                !isLoadingMore &&
+                scrollInfo.metrics.pixels >=
+                    scrollInfo.metrics.maxScrollExtent - 200) {
+              context.read<SearchBloc>().add(
+                const SearchEvent.loadNextPage(),
+              );
+            }
+            return false;
           }
-          return false;
         },
         child: ListView.separated(
           itemCount: hasReachedEnd ? movies.length : movies.length + 1,
           separatorBuilder: (_, _) => const Divider(),
           itemBuilder: (context, index) {
-            if (index >= movies.length) {
+            if (index < movies.length) {
+              final movie = movies[index];
+              final posterUrl = movie.posterUrl.value.getOrElse(() => '');
+              return ListTile(
+                leading: posterUrl.isNotEmpty
+                    ? Image.network(
+                        posterUrl,
+                        width: 50,
+                        errorBuilder: (_, _, _) => const SizedBox(),
+                      )
+                    : null,
+                title: Text(movie.title.value.getOrElse(() => '')),
+                subtitle: Text(movie.year.value.getOrElse(() => '')),
+                onTap: () => context.router.push(
+                  DetailsRoute(imdbId: movie.id),
+                ),
+              );
+            }
+            if (isLoadingMore) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator()),
               );
+            } else if (footerError != null) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    footerError!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              );
+            } else {
+              return const SizedBox.shrink();
             }
-            final movie = movies[index];
-            final posterUrl = movie.posterUrl.value.getOrElse(() => '');
-            return ListTile(
-              leading: posterUrl.isNotEmpty
-                  ? Image.network(posterUrl, width: 50)
-                  : null,
-              title: Text(movie.title.value.getOrElse(() => 'Unknown')),
-              subtitle: Text(movie.year.value.getOrElse(() => 'Unknown')),
-              onTap: () => context.router.push(
-                DetailsRoute(imdbId: movie.id),
-              ),
-            );
           },
         ),
       );

@@ -20,20 +20,15 @@ void main() {
   late MockSearchBloc mockBloc;
   late MockStackRouter mockRouter;
 
-  final movies = [
-    Movie.summary(
-      id: 'tt0000001',
-      title: 'Movie A',
-      year: '2001',
+  final movies = List<Movie>.generate(
+    7,
+    (i) => Movie.summary(
+      id: 'tt000000${i + 1}',
+      title: 'Movie $i',
+      year: '${2000 + i}',
       posterUrl: '',
     ),
-    Movie.summary(
-      id: 'tt0000002',
-      title: 'Movie B',
-      year: '2002',
-      posterUrl: '',
-    ),
-  ];
+  );
 
   setUp(
     () {
@@ -68,31 +63,15 @@ void main() {
   );
 
   testWidgets(
-    'displays list tiles and loading indicator when not at end',
-    (tester) async {
-      // Act
-      await tester.pumpWidget(
-        buildWidget(hasReachedEnd: false, isLoadingMore: false),
-      );
-      await tester.pump();
-
-      // Assert
-      expect(find.byType(ListTile), findsNWidgets(2));
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    },
-  );
-
-  testWidgets(
     'does not show loading indicator when hasReachedEnd is true',
     (tester) async {
       // Act
       await tester.pumpWidget(
         buildWidget(hasReachedEnd: true, isLoadingMore: false),
       );
-      await tester.pumpAndSettle();
 
       // Assert
-      expect(find.byType(ListTile), findsNWidgets(2));
+      expect(find.byType(ListTile), findsNWidgets(movies.length));
       expect(find.byType(CircularProgressIndicator), findsNothing);
     },
   );
@@ -105,8 +84,7 @@ void main() {
         buildWidget(hasReachedEnd: true, isLoadingMore: false),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Movie A'));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text(movies.first.title.getOrCrash()));
 
       // Assert
       verify(

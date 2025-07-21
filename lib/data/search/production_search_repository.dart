@@ -25,16 +25,15 @@ class ProductionSearchRepository implements SearchRepositoryInterface {
         title: title.getOrCrash(),
         page: page,
       );
-      final list = raw['Search'] as List<dynamic>;
-      final models = list.map(
-        (element) => MovieDTO.fromJson(element as Map<String, dynamic>),
-      );
-      final movies = models.map((model) => model.toDomain()).toList();
+      final list = raw['Search'] as List<dynamic>? ?? <dynamic>[];
+      final movies = list
+          .cast<Map<String, dynamic>>()
+          .map((json) => MovieDTO.fromJson(json).toDomain())
+          .toList();
       return right(movies);
     } on Exception catch (exception) {
-      return left(
-        Failure.unexpectedError(errorMessage: exception.toString()),
-      );
+      final message = exception.toString();
+      return left(Failure.unexpectedError(errorMessage: message));
     }
   }
 }

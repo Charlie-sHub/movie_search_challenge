@@ -40,7 +40,6 @@ void main() {
           home: SearchPage(),
         ),
       );
-      await tester.pumpAndSettle();
 
       // Assert
       expect(find.byType(ChallengeAppBar), findsOneWidget);
